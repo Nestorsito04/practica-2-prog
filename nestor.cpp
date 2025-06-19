@@ -89,3 +89,62 @@ void mostrarProductosPorCategoria() {
     cin.getline(categoria, 30);
 
     cout << "\n Productos en la categoria " << categoria << " \n";
+for (size_t i = 0; i < productos.size(); i++) {
+        if (productos[i].activo && strcmp(productos[i].categoria, categoria) == 0) {
+            cout << "Codigo: " << productos[i].codigo << ", Nombre: " << productos[i].nombre
+                 << ", Precio: " << productos[i].precio << ", Stock: " << productos[i].stock << endl;
+        }
+    }
+}
+
+void buscarProductoPorCodigo() {
+    limpiarPantalla();
+    if (productos.empty()) {
+        cout << "No hay productos almacenados.\n";
+        return;
+    }
+    char codigo[10];
+    cout << "\nIngrese el codigo del producto: ";
+    cin.ignore();
+    cin.getline(codigo, 10);
+
+    for (size_t i = 0; i < productos.size(); i++) {
+        if (strcmp(productos[i].codigo, codigo) == 0 && productos[i].activo) {
+            cout << "\n--- Producto Encontrado ---\n";
+            cout << "Codigo: " << productos[i].codigo << ", Nombre: " << productos[i].nombre
+                 << ", Precio: " << productos[i].precio << ", Stock: " << productos[i].stock
+                 << ", Categoria: " << productos[i].categoria << endl;
+            return;
+        }
+    }
+    cout << "Producto no encontrado.\n";
+}
+
+void modificarProducto() {
+    limpiarPantalla();
+    if (productos.empty()) {
+        cout << "No hay productos almacenados.\n";
+        return;
+    }
+    char codigo[10];
+    cout << "\nIngrese el codigo del producto a modificar: ";
+    cin.ignore();
+    cin.getline(codigo, 10);
+
+    for (size_t i = 0; i < productos.size(); i++) {
+        if (strcmp(productos[i].codigo, codigo) == 0 && productos[i].activo) {
+            cout << "\n--- Modificar Producto ---\n";
+            cout << "Nuevo Precio: ";
+            cin >> productos[i].precio;
+            cout << "Nuevo Stock: ";
+            cin >> productos[i].stock;
+            cout << "Nueva Categoria: ";
+            cin.ignore();
+            cin.getline(productos[i].categoria, 30);
+
+            cout << "Producto modificado con exito.\n";
+            return;
+        }
+    }
+    cout << "Producto no encontrado.\n";
+}
