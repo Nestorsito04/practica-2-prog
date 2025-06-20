@@ -148,3 +148,77 @@ void modificarProducto() {
     }
     cout << "Producto no encontrado.\n";
 }
+
+void eliminarProducto() {
+    limpiarPantalla();
+    if (productos.empty()) {
+        cout << "No hay productos almacenados.\n";
+        return;
+    }
+    char codigo[10];
+    cout << "\nIngrese el codigo del producto a eliminar: ";
+    cin.ignore();
+    cin.getline(codigo, 10);
+
+    for (size_t i = 0; i < productos.size(); i++) {
+        if (strcmp(productos[i].codigo, codigo) == 0 && productos[i].activo) {
+            productos[i].activo = false;
+            cout << "Producto eliminado (borrado logico) con exito.\n";
+            return;
+        }
+    }
+    cout << "Producto no encontrado.\n";
+}
+
+void recuperarProducto() {
+    limpiarPantalla();
+    if (productos.empty()) {
+        cout << "No hay productos almacenados.\n";
+        return;
+    }
+    char codigo[10];
+    cout << "\nIngrese el codigo del producto a recuperar: ";
+    cin.ignore();
+    cin.getline(codigo, 10);
+
+    for (size_t i = 0; i < productos.size(); i++) {
+        if (strcmp(productos[i].codigo, codigo) == 0 && !productos[i].activo) {
+            productos[i].activo = true;
+            cout << "Producto recuperado con exito.\n";
+            return;
+        }
+    }
+    cout << "Producto no encontrado o ya está activo.\n";
+}
+
+void guardarEnArchivo(const string& nombreArchivo) {
+    limpiarPantalla();
+    ofstream archivo(nombreArchivo, ios::binary);
+    if (!archivo) {
+        cerr << "Error al abrir el archivo para escritura.\n";
+        return;
+    }
+    size_t cantidad = productos.size();
+    archivo.write(reinterpret_cast<char*>(&cantidad), sizeof(cantidad));
+    archivo.write(reinterpret_cast<char*>(productos.data()), cantidad * sizeof(Producto));
+    archivo.close();
+    cout << "Datos guardados en " << nombreArchivo << " exitosamente.\n";
+}
+
+void cargarDesdeArchivo(const string& nombreArchivo) {
+    limpiarPantalla();
+    ifstream archivo(nombreArchivo, ios::binary);
+    if (!archivo) {
+        cerr << "Error al abrir el archivo para lectura.\n";
+        return;
+    }
+    size_t cantidad;
+    archivo.read(reinterpret_cast<char*>(&cantidad), sizeof(cantidad));
+
+    productos.resize(cantidad);
+    archivo.read(reinterpret_cast<char*>(productos.data()), cantidad * sizeof(Producto));
+
+    archivo.close();
+    cout << "Datos cargados desde " << nombreArchivo << " exitosamente.\n";
+}
+
