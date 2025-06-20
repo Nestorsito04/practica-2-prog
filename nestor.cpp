@@ -222,3 +222,55 @@ void cargarDesdeArchivo(const string& nombreArchivo) {
     cout << "Datos cargados desde " << nombreArchivo << " exitosamente.\n";
 }
 
+int main() {
+    string nombreArchivo = "inventario.bin";
+    int opcion;
+
+    do {
+        limpiarPantalla();
+        mostrarMenu();
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                agregarProducto();
+                break;
+            case 2:
+                mostrarProductosActivos();
+                break;
+            case 3:
+                mostrarProductosPorCategoria();
+                break;
+            case 4:
+                buscarProductoPorCodigo();
+                break;
+            case 5:
+                modificarProducto();
+                break;
+            case 6:
+                eliminarProducto();
+                break;
+            case 7:
+                recuperarProducto();
+                break;
+            case 8:
+                guardarEnArchivo(nombreArchivo);
+                break;
+            case 9:
+                cargarDesdeArchivo(nombreArchivo);
+                break;
+            case 10:
+                cout << "Saliendo del programa...\n";
+                break;
+            default:
+                cout << "Opcion no valida. Intente de nuevo.\n";
+        }
+        if (opcion != 10) {
+            cout << "\nPresione Enter para continuar...";
+            cin.ignore();
+            cin.get();
+        }
+    } while (opcion != 10);
+
+    return 0;
+}
