@@ -1,276 +1,156 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
-#include <cstring> 
-#include <cstdlib> 
+#include <cstring>
 
 using namespace std;
 
-
 struct Producto {
-    char codigo[10]; 
+    int codigo;
     char nombre[30];
     float precio;
     int stock;
     char categoria[30];
     bool activo;
 };
-vector<Producto> productos;
 
-void limpiarPantalla() {
-    #ifdef _WIN32
-        system("cls"); // Para Windows
-    #else
-        system("clear"); // Para Unix/Linux/macOS
-    #endif
+long pos(int c) {
+    return (c - 1) * sizeof(Producto);
 }
 
-void mostrarMenu() {
-    cout << "1. Agregar un nuevo producto\n";
-    cout << "2. Mostrar todos los productos activos\n";
-    cout << "3. Mostrar productos por categoria\n";
-    cout << "4. Buscar un producto por codigo\n";
-    cout << "5. Modificar un producto\n";
-    cout << "6. Eliminar un producto (borrado logico)\n";
-    cout << "7. Recuperar un producto borrado\n";
-    cout << "8. Guardar datos en archivo binario\n";
-    cout << "9. Cargar datos desde archivo binario\n";
-    cout << "10. Salir\n";
-    cout << "\nSeleccione una opcion: ";
+void limpiarPantalla() {
+    cout << string(50, '\n');
+}
+
+void crearArchivo() {
+    fstream f("nombreArchivo", ios::in | ios::binary);
+    if (!f) f.open("nombreArchivo", ios::out | ios::binary);
+}
+
+bool existe(int code) {
+    fstream f("nombreArchivo", ios::in | ios::binary);
+    if (!f) return false;
+    Producto p;
+    f.seekg(pos(code));
+    return f.read((char*)&p, sizeof(p)) && p.activo;
 }
 
 void agregarProducto() {
-    limpiarPantalla();
-    Producto nuevo;
-    cout << "\nNuevo Producto\n";
-    cout << "Codigo: ";
+    Producto p; 
+ cout << "Codigo: "; cin >> p.codigo;
+    if (p.codigo <= 0 || existe(p.codigo)) {
+        cout << "Invalido o existente."; return;
+    }
     cin.ignore();
-    cin.getline(nuevo.codigo, 10);
-    cout << "Nombre: ";
-    cin.getline(nuevo.nombre, 30);
-    cout << "Precio: ";
-    cin >> nuevo.precio;
-    cout << "Stock: ";
-    cin >> nuevo.stock;
-    cout << "Categoria: ";
-    cin.ignore();
-    cin.getline(nuevo.categoria, 30);
-    nuevo.activo = true;
-
-    productos.push_back(nuevo);
-    cout << "Producto agregado con exito.\n";
+    cout << "Nombre: "; cin.getline(p.nombre, 31);
+    cout << "Precio: "; cin >> p.precio;
+    cout << "Stock: "; cin >> p.stock; cin.ignore();
+    cout << "Categoria: "; cin.getline(p.categoria, 40);
+    p.activo = true;
+    fstream f("nombreArchivo", ios::in | ios::out | ios::binary);
+    f.seekp(pos(p.codigo));
+    f.write((char*)&p, sizeof(p));
 }
 
 void mostrarProductosActivos() {
-    limpiarPantalla();
-    if (productos.empty()) {
-        cout << "No hay productos almacenados.\n";
-        return;
-    }
-    cout << "\n Productos Activos \n";
-    for (size_t i = 0; i < productos.size(); i++) {
-        if (productos[i].activo) {
-            cout << i + 1 << ". Codigo: " << productos[i].codigo << ", Nombre: " << productos[i].nombre
-                 << ", Precio: " << productos[i].precio << ", Stock: " << productos[i].stock
-                 << ", Categoria: " << productos[i].categoria << endl;
+    ifstream f("nombreArchivo", ios::binary);
+    Producto p;
+    while (f.read((char*)&p, sizeof(p))) {
+        if (p.activo) {
+            cout << "Codigo: " << p.codigo << ", Nombre: " << p.nombre << ", Precio: " << p.precio
+                 << ", Stock: " << p.stock << ", Categoria: " << p.categoria << "\n";
         }
     }
 }
 
 void mostrarProductosPorCategoria() {
-    limpiarPantalla();
-    if (productos.empty()) {
-        cout << "No hay productos almacenados.\n";
-        return;
-    }
-    char categoria[30];
-    cout << "\nIngrese la categoria: ";
-    cin.ignore();
-    cin.getline(categoria, 30);
-
-    cout << "\n Productos en la categoria " << categoria << " \n";
-for (size_t i = 0; i < productos.size(); i++) {
-        if (productos[i].activo && strcmp(productos[i].categoria, categoria) == 0) {
-            cout << "Codigo: " << productos[i].codigo << ", Nombre: " << productos[i].nombre
-                 << ", Precio: " << productos[i].precio << ", Stock: " << productos[i].stock << endl;
+    char cat[30];
+    cout << "Categoria: "; cin.ignore(); cin.getline(cat, 30);
+    ifstream f("nombreArchivo", ios::binary);
+    Producto p;
+    while (f.read((char*)&p, sizeof(p))) {
+        if (p.activo && strcmp(p.categoria, cat) == 0) {
+            cout << "Codigo: " << p.codigo << ", Nombre: " << p.nombre << ", Precio: " << p.precio << ", Stock: " << p.stock << "\n";
         }
     }
 }
 
 void buscarProductoPorCodigo() {
-    limpiarPantalla();
-    if (productos.empty()) {
-        cout << "No hay productos almacenados.\n";
-        return;
+    int c;
+    cout << "Codigo (entero): "; cin >> c;
+    fstream f("nombreArchivo", ios::in | ios::binary);
+    Producto p;
+    f.seekg(pos(c));
+    if (f.read((char*)&p, sizeof(p)) && p.activo) {
+        cout << "Codigo: " << p.codigo << ", Nombre: " << p.nombre << ", Precio: " << p.precio
+             << ", Stock: " << p.stock << ", Categoria: " << p.categoria << "\n";
+    } else {
+        cout << "Producto no encontrado.\n";
     }
-    char codigo[10];
-    cout << "\nIngrese el codigo del producto: ";
-    cin.ignore();
-    cin.getline(codigo, 10);
-
-    for (size_t i = 0; i < productos.size(); i++) {
-        if (strcmp(productos[i].codigo, codigo) == 0 && productos[i].activo) {
-            cout << "\n--- Producto Encontrado ---\n";
-            cout << "Codigo: " << productos[i].codigo << ", Nombre: " << productos[i].nombre
-                 << ", Precio: " << productos[i].precio << ", Stock: " << productos[i].stock
-                 << ", Categoria: " << productos[i].categoria << endl;
-            return;
-        }
-    }
-    cout << "Producto no encontrado.\n";
 }
 
 void modificarProducto() {
-    limpiarPantalla();
-    if (productos.empty()) {
-        cout << "No hay productos almacenados.\n";
-        return;
+    int c;
+    cout << "Codigo (entero): "; cin >> c;
+    fstream f("nombreArchivo", ios::in | ios::out | ios::binary);
+    Producto p;
+    f.seekg(pos(c));
+    if (f.read((char*)&p, sizeof(p)) && p.activo) {
+        cout << "Nuevo Precio: "; cin >> p.precio;
+        cout << "Nuevo Stock: "; cin >> p.stock; cin.ignore();
+        cout << "Nueva Categoria: "; cin.getline(p.categoria, 30);
+        f.seekp(pos(c));
+        f.write((char*)&p, sizeof(p));
+        cout << "Producto modificado.\n";
+    } else {
+        cout << "Producto no encontrado.\n";
     }
-    char codigo[10];
-    cout << "\nIngrese el codigo del producto a modificar: ";
-    cin.ignore();
-    cin.getline(codigo, 10);
-
-    for (size_t i = 0; i < productos.size(); i++) {
-        if (strcmp(productos[i].codigo, codigo) == 0 && productos[i].activo) {
-            cout << "\n--- Modificar Producto ---\n";
-            cout << "Nuevo Precio: ";
-            cin >> productos[i].precio;
-            cout << "Nuevo Stock: ";
-            cin >> productos[i].stock;
-            cout << "Nueva Categoria: ";
-            cin.ignore();
-            cin.getline(productos[i].categoria, 30);
-
-            cout << "Producto modificado con exito.\n";
-            return;
-        }
-    }
-    cout << "Producto no encontrado.\n";
 }
 
 void eliminarProducto() {
-    limpiarPantalla();
-    if (productos.empty()) {
-        cout << "No hay productos almacenados.\n";
-        return;
+    int c;
+    cout << "Codigo (entero): "; cin >> c;
+    fstream f("nombreArchivo", ios::in | ios::out | ios::binary);
+    Producto p;
+    f.seekg(pos(c));
+    if (f.read((char*)&p, sizeof(p)) && p.activo) {
+        p.activo = false;
+        f.seekp(pos(c));
+        f.write((char*)&p, sizeof(p));
+        cout << "Producto eliminado logicamente.\n";
+    } else {
+        cout << "Producto no encontrado.\n";
     }
-    char codigo[10];
-    cout << "\nIngrese el codigo del producto a eliminar: ";
-    cin.ignore();
-    cin.getline(codigo, 10);
-
-    for (size_t i = 0; i < productos.size(); i++) {
-        if (strcmp(productos[i].codigo, codigo) == 0 && productos[i].activo) {
-            productos[i].activo = false;
-            cout << "Producto eliminado (borrado logico) con exito.\n";
-            return;
-        }
-    }
-    cout << "Producto no encontrado.\n";
-}
-
-void recuperarProducto() {
-    limpiarPantalla();
-    if (productos.empty()) {
-        cout << "No hay productos almacenados.\n";
-        return;
-    }
-    char codigo[10];
-    cout << "\nIngrese el codigo del producto a recuperar: ";
-    cin.ignore();
-    cin.getline(codigo, 10);
-
-    for (size_t i = 0; i < productos.size(); i++) {
-        if (strcmp(productos[i].codigo, codigo) == 0 && !productos[i].activo) {
-            productos[i].activo = true;
-            cout << "Producto recuperado con exito.\n";
-            return;
-        }
-    }
-    cout << "Producto no encontrado o ya está activo.\n";
-}
-
-void guardarEnArchivo(const string& nombreArchivo) {
-    limpiarPantalla();
-    ofstream archivo(nombreArchivo, ios::binary);
-    if (!archivo) {
-        cerr << "Error al abrir el archivo para escritura.\n";
-        return;
-    }
-    size_t cantidad = productos.size();
-    archivo.write(reinterpret_cast<char*>(&cantidad), sizeof(cantidad));
-    archivo.write(reinterpret_cast<char*>(productos.data()), cantidad * sizeof(Producto));
-    archivo.close();
-    cout << "Datos guardados en " << nombreArchivo << " exitosamente.\n";
-}
-
-void cargarDesdeArchivo(const string& nombreArchivo) {
-    limpiarPantalla();
-    ifstream archivo(nombreArchivo, ios::binary);
-    if (!archivo) {
-        cerr << "Error al abrir el archivo para lectura.\n";
-        return;
-    }
-    size_t cantidad;
-    archivo.read(reinterpret_cast<char*>(&cantidad), sizeof(cantidad));
-
-    productos.resize(cantidad);
-    archivo.read(reinterpret_cast<char*>(productos.data()), cantidad * sizeof(Producto));
-
-    archivo.close();
-    cout << "Datos cargados desde " << nombreArchivo << " exitosamente.\n";
 }
 
 int main() {
-    string nombreArchivo = "inventario.bin";
+    crearArchivo();
     int opcion;
-
     do {
-        limpiarPantalla();
-        mostrarMenu();
+        cout << "1. Agregar un nuevo producto\n";
+        cout << "2. Mostrar todos los productos activos\n";
+        cout << "3. Mostrar productos por categoria\n";
+        cout << "4. Buscar un producto por codigo\n";
+        cout << "5. Modificar un producto\n";
+        cout << "6. Eliminar un producto (borrado logico)\n";
+        cout << "0. Salir\n";
+        cout << "\nSeleccione una opcion: ";
         cin >> opcion;
 
         switch (opcion) {
-            case 1:
-                agregarProducto();
-                break;
-            case 2:
-                mostrarProductosActivos();
-                break;
-            case 3:
-                mostrarProductosPorCategoria();
-                break;
-            case 4:
-                buscarProductoPorCodigo();
-                break;
-            case 5:
-                modificarProducto();
-                break;
-            case 6:
-                eliminarProducto();
-                break;
-            case 7:
-                recuperarProducto();
-                break;
-            case 8:
-                guardarEnArchivo(nombreArchivo);
-                break;
-            case 9:
-                cargarDesdeArchivo(nombreArchivo);
-                break;
-            case 10:
-                cout << "Saliendo del programa...\n";
-                break;
-            default:
-                cout << "Opcion no valida. Intente de nuevo.\n";
+            case 1: agregarProducto(); break;
+            case 2: mostrarProductosActivos(); break;
+            case 3: mostrarProductosPorCategoria(); break;
+            case 4: buscarProductoPorCodigo(); break;
+            case 5: modificarProducto(); break;
+            case 6: eliminarProducto(); break;
         }
-        if (opcion != 10) {
+
+        if (opcion != 0) {
             cout << "\nPresione Enter para continuar...";
             cin.ignore();
             cin.get();
         }
-    } while (opcion != 10);
+    } while (opcion != 0);
 
     return 0;
 }
